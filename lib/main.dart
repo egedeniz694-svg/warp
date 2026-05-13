@@ -41,10 +41,8 @@ PersistentKeepalive = 25
   void toggleVpn() async {
     try {
       if (isConnected) {
-        // Hata düzeldi: 'stop' yerine 'disconnect' veya paketin güncel hali
         await wireguard.stop(); 
       } else {
-        // Hata düzeldi: Paket id ve isim eklendi
         await wireguard.start(
           bundleId: "com.egedeniz.warp", 
           config: config,
@@ -53,7 +51,7 @@ PersistentKeepalive = 25
       }
       setState(() => isConnected = !isConnected);
     } catch (e) {
-      print("Bağlantı Hatası: $e");
+      print("Hata: $e");
     }
   }
 
@@ -61,76 +59,47 @@ PersistentKeepalive = 25
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // blurRadius hatası boxShadow içine alınarak düzeltildi
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300, 
-              height: 300, 
-              decoration: BoxDecoration(
-                shape: BoxShape.circle, 
-                color: Colors.blue.withOpacity(0.2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.2),
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  )
-                ],
-              ),
-            ),
-          ),
-          Center(
-            child: GlassmorphicContainer(
-              width: 320,
-              height: 550,
-              borderRadius: 30,
-              blur: 25,
-              alignment: Alignment.center,
-              border: 1.5,
-              linearGradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
-              ),
-              borderGradient: LinearGradient(
-                colors: [Colors.blueAccent.withOpacity(0.5), Colors.purpleAccent.withOpacity(0.5)],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("WARP", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 8)),
-                  SizedBox(height: 80),
-                  GestureDetector(
-                    onTap: toggleVpn,
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 500),
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: isConnected 
-                          ? [BoxShadow(color: Colors.blueAccent.withOpacity(0.6), blurRadius: 40, spreadRadius: 5)] 
-                          : [],
-                        gradient: RadialGradient(
-                          colors: isConnected 
-                            ? [Colors.blueAccent, Colors.blue.shade900] 
-                            : [Colors.grey.shade800, Colors.black],
-                        ),
-                      ),
-                      child: Icon(Icons.power_settings_new_rounded, size: 90, color: Colors.white),
+      body: Center(
+        child: GlassmorphicContainer(
+          width: 320,
+          height: 550,
+          borderRadius: 30,
+          blur: 25,
+          alignment: Alignment.center,
+          border: 2,
+          linearGradient: LinearGradient(colors: [Colors.white10, Colors.white.withOpacity(0.05)]),
+          borderGradient: LinearGradient(colors: [Colors.blueAccent, Colors.purpleAccent]),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("WARP", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 8)),
+              SizedBox(height: 100),
+              GestureDetector(
+                onTap: toggleVpn,
+                child: Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: isConnected ? Colors.blueAccent.withOpacity(0.5) : Colors.transparent,
+                        blurRadius: 40,
+                        spreadRadius: 5,
+                      )
+                    ],
+                    gradient: RadialGradient(
+                      colors: isConnected ? [Colors.blueAccent, Colors.blue.shade900] : [Colors.grey.shade800, Colors.black],
                     ),
                   ),
-                  SizedBox(height: 60),
-                  Text(isConnected ? "BAĞLANTI AKTİF" : "KORUMA DEVRE DIŞI", style: TextStyle(color: isConnected ? Colors.blueAccent : Colors.white70, fontWeight: FontWeight.bold)),
-                ],
+                  child: Icon(Icons.power_settings_new, size: 80, color: Colors.white),
+                ),
               ),
-            ),
+              SizedBox(height: 50),
+              Text(isConnected ? "CONNECTED" : "DISCONNECTED", style: TextStyle(color: isConnected ? Colors.blueAccent : Colors.grey)),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
