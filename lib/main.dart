@@ -8,6 +8,7 @@ class WarpApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       home: WarpHome(),
     );
@@ -23,17 +24,19 @@ class _WarpHomeState extends State<WarpHome> {
   final wireguard = WireGuardFlutter.instance;
   bool isConnected = false;
 
-  // Buraya VDS'inden aldığın config bilgilerini gireceğiz
+  // Senin VDS Bilgilerin Buraya Gömüldü
   final String config = """
 [Interface]
-PrivateKey = SENIN_PRIVATE_KEY
-Address = 10.0.0.2/32
-DNS = 1.1.1.1
+PrivateKey = YPilfrHHIeb6F2Y53SUb+jqZ0btEJqW4LmB7rX5QD3k=
+Address = 10.7.0.2/24
+DNS = 172.31.0.2
 
 [Peer]
-PublicKey = VDS_PUBLIC_KEY
-Endpoint = VDS_IP_ADRESIN:51820
-AllowedIPs = 0.0.0.0/0
+PublicKey = t15hg8eyo/bWMljjavqNuO5r4w6g5kNM+fBgRPMa8EQ=
+PresharedKey = i7iMQiTrXij2u8VkpnNeoDhY4OZDKYYXu1FNS3nNXkM=
+AllowedIPs = 0.0.0.0/0, ::/0
+Endpoint = 100.27.231.149:51820
+PersistentKeepalive = 25
 """;
 
   void toggleVpn() async {
@@ -42,65 +45,102 @@ AllowedIPs = 0.0.0.0/0
         await wireguard.stop();
       } else {
         await wireguard.start(
-          bundleId: "com.example.warp_vpn", // iOS için kritik
+          bundleId: "com.egedeniz.warp", // iOS için senin bundle id
           config: config,
           name: "WarpVPN",
         );
       }
       setState(() => isConnected = !isConnected);
     } catch (e) {
-      print("Bağlantı hatası: $e");
+      print("Bağlantı Hatası: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/bg.jpg"), // Arka plana havalı bir görsel koy
-            fit: BoxFit.cover,
+      backgroundColor: Colors.black, // Arka plan derin siyah
+      body: Stack(
+        children: [
+          // Arka plandaki havalı ışık hüzmeleri
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blue.withOpacity(0.2), blurRadius: 100)),
           ),
-        ),
-        child: Center(
-          child: GlassmorphicContainer(
-            width: 350,
-            height: 500,
-            borderRadius: 30,
-            blur: 20,
-            alignment: Alignment.bottomCenter,
-            border: 2,
-            linearGradient: LinearGradient(
-              colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
-            ),
-            borderGradient: LinearGradient(
-              colors: [Colors.blue.withOpacity(0.5), Colors.purple.withOpacity(0.5)],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("WARP", style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 5)),
-                SizedBox(height: 50),
-                GestureDetector(
-                  onTap: toggleVpn,
-                  child: Container(
-                    width: 150,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: isConnected ? [BoxShadow(color: Colors.blue.withAlpha(150), blurRadius: 30, spreadRadius: 10)] : [],
-                      gradient: RadialGradient(colors: isConnected ? [Colors.blue, Colors.blueAccent] : [Colors.grey, Colors.black]),
+          Center(
+            child: GlassmorphicContainer(
+              width: 320,
+              height: 550,
+              borderRadius: 30,
+              blur: 25,
+              alignment: Alignment.center,
+              border: 1.5,
+              linearGradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
+              ),
+              borderGradient: LinearGradient(
+                colors: [Colors.blueAccent.withOpacity(0.5), Colors.purpleAccent.withOpacity(0.5)],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("WARP", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 8, color: Colors.white)),
+                  SizedBox(height: 10),
+                  Text("SECURE TUNNEL", style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5))),
+                  SizedBox(height: 80),
+                  
+                  // O efsanevi buton
+                  GestureDetector(
+                    onTap: toggleVpn,
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 500),
+                      width: 180,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: isConnected 
+                          ? [BoxShadow(color: Colors.blueAccent.withOpacity(0.6), blurRadius: 40, spreadRadius: 5)] 
+                          : [BoxShadow(color: Colors.black, blurRadius: 20)],
+                        gradient: RadialGradient(
+                          colors: isConnected 
+                            ? [Colors.blueAccent, Colors.blue.shade900] 
+                            : [Colors.grey.shade800, Colors.black],
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.power_settings_new_rounded, 
+                        size: 90, 
+                        color: isConnected ? Colors.white : Colors.grey.shade400
+                      ),
                     ),
-                    child: Icon(Icons.power_settings_new, size: 80, color: Colors.white),
                   ),
-                ),
-                SizedBox(height: 30),
-                Text(isConnected ? "BAĞLANDI" : "BAĞLANTI YOK", style: TextStyle(fontSize: 18, color: isConnected ? Colors.blue : Colors.grey)),
-              ],
+                  
+                  SizedBox(height: 60),
+                  
+                  // Durum Bilgisi
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isConnected ? Colors.blue.withOpacity(0.1) : Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isConnected ? "BAĞLANTI AKTİF" : "KORUMA DEVRE DIŞI",
+                      style: TextStyle(
+                        color: isConnected ? Colors.blueAccent : Colors.white70,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
