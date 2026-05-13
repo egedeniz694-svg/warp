@@ -1,0 +1,39 @@
+name: Flutter Build (APK & IPA)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Java Kurulumu
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Flutter Kurulumu
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Paketleri Getir
+        run: flutter pub get
+        
+      - name: Android APK Üret
+        run: flutter build apk --debug
+        
+      - name: iOS Iskeletini Hazırla
+        run: flutter build ios --no-codesign
+        
+      - name: Dosyaları Hazırla ve Sun
+        uses: actions/upload-artifact@v4
+        with:
+          name: Warp-Paketleri
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/ios/iphoneos/*.app
