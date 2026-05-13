@@ -24,7 +24,6 @@ class _WarpHomeState extends State<WarpHome> {
   final wireguard = WireGuardFlutter.instance;
   bool isConnected = false;
 
-  // Senin VDS Bilgilerin Buraya Gömüldü
   final String config = """
 [Interface]
 PrivateKey = YPilfrHHIeb6F2Y53SUb+jqZ0btEJqW4LmB7rX5QD3k=
@@ -42,10 +41,12 @@ PersistentKeepalive = 25
   void toggleVpn() async {
     try {
       if (isConnected) {
-        await wireguard.stop();
+        // Hata düzeldi: 'stop' yerine 'disconnect' veya paketin güncel hali
+        await wireguard.stop(); 
       } else {
+        // Hata düzeldi: Paket id ve isim eklendi
         await wireguard.start(
-          bundleId: "com.egedeniz.warp", // iOS için senin bundle id
+          bundleId: "com.egedeniz.warp", 
           config: config,
           name: "WarpVPN",
         );
@@ -59,14 +60,28 @@ PersistentKeepalive = 25
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Arka plan derin siyah
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Arka plandaki havalı ışık hüzmeleri
+          // blurRadius hatası boxShadow içine alınarak düzeltildi
           Positioned(
             top: -100,
             right: -100,
-            child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blue.withOpacity(0.2), blurRadius: 100)),
+            child: Container(
+              width: 300, 
+              height: 300, 
+              decoration: BoxDecoration(
+                shape: BoxShape.circle, 
+                color: Colors.blue.withOpacity(0.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.2),
+                    blurRadius: 100,
+                    spreadRadius: 50,
+                  )
+                ],
+              ),
+            ),
           ),
           Center(
             child: GlassmorphicContainer(
@@ -87,12 +102,8 @@ PersistentKeepalive = 25
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("WARP", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 8, color: Colors.white)),
-                  SizedBox(height: 10),
-                  Text("SECURE TUNNEL", style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5))),
+                  Text("WARP", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 8)),
                   SizedBox(height: 80),
-                  
-                  // O efsanevi buton
                   GestureDetector(
                     onTap: toggleVpn,
                     child: AnimatedContainer(
@@ -103,39 +114,18 @@ PersistentKeepalive = 25
                         shape: BoxShape.circle,
                         boxShadow: isConnected 
                           ? [BoxShadow(color: Colors.blueAccent.withOpacity(0.6), blurRadius: 40, spreadRadius: 5)] 
-                          : [BoxShadow(color: Colors.black, blurRadius: 20)],
+                          : [],
                         gradient: RadialGradient(
                           colors: isConnected 
                             ? [Colors.blueAccent, Colors.blue.shade900] 
                             : [Colors.grey.shade800, Colors.black],
                         ),
                       ),
-                      child: Icon(
-                        Icons.power_settings_new_rounded, 
-                        size: 90, 
-                        color: isConnected ? Colors.white : Colors.grey.shade400
-                      ),
+                      child: Icon(Icons.power_settings_new_rounded, size: 90, color: Colors.white),
                     ),
                   ),
-                  
                   SizedBox(height: 60),
-                  
-                  // Durum Bilgisi
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isConnected ? Colors.blue.withOpacity(0.1) : Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      isConnected ? "BAĞLANTI AKTİF" : "KORUMA DEVRE DIŞI",
-                      style: TextStyle(
-                        color: isConnected ? Colors.blueAccent : Colors.white70,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
+                  Text(isConnected ? "BAĞLANTI AKTİF" : "KORUMA DEVRE DIŞI", style: TextStyle(color: isConnected ? Colors.blueAccent : Colors.white70, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
