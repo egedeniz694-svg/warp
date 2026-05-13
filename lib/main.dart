@@ -2,29 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:glassmorphism/glassmorphism.dart';
 import 'package:wireguard_flutter/wireguard_flutter.dart';
 
-void main() => runApp(WarpApp());
+void main() => runApp(const WarpApp());
 
 class WarpApp extends StatelessWidget {
+  const WarpApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
-      home: WarpHome(),
+      home: const WarpHome(),
     );
   }
 }
 
 class WarpHome extends StatefulWidget {
+  const WarpHome({super.key});
+
   @override
-  _WarpHomeState createState() => _WarpHomeState();
+  State<WarpHome> createState() => _WarpHomeState();
 }
 
 class _WarpHomeState extends State<WarpHome> {
-  final wireguard = WireGuardFlutter.instance;
+  final _wireguard = WireGuardFlutter.instance;
   bool isConnected = false;
 
-  final String config = """
+  final String vpnConfig = """
 [Interface]
 PrivateKey = YPilfrHHIeb6F2Y53SUb+jqZ0btEJqW4LmB7rX5QD3k=
 Address = 10.7.0.2/24
@@ -41,17 +45,20 @@ PersistentKeepalive = 25
   void toggleVpn() async {
     try {
       if (isConnected) {
-        await wireguard.stop(); 
+        // 'stop' yerine 'deactivate' (0.1.3 sürümü için)
+        await _wireguard.deactivate(); 
       } else {
-        await wireguard.start(
+        // 'start' yerine 'activate' (0.1.3 sürümü için)
+        await _wireguard.activate(
           bundleId: "com.egedeniz.warp", 
-          config: config,
+          containerId: "", // iOS tarafı için gerekebilir, şimdilik boş
+          config: vpnConfig,
           name: "WarpVPN",
         );
       }
       setState(() => isConnected = !isConnected);
     } catch (e) {
-      print("Hata: $e");
+      debugPrint("VPN Hatası: $e");
     }
   }
 
@@ -67,36 +74,45 @@ PersistentKeepalive = 25
           blur: 25,
           alignment: Alignment.center,
           border: 2,
-          linearGradient: LinearGradient(colors: [Colors.white10, Colors.white.withOpacity(0.05)]),
-          borderGradient: LinearGradient(colors: [Colors.blueAccent, Colors.purpleAccent]),
+          linearGradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
+          ),
+          borderGradient: LinearGradient(
+            colors: [Colors.blueAccent, Colors.purpleAccent],
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("WARP", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 8)),
-              SizedBox(height: 100),
+              const Text("WARP", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 8)),
+              const SizedBox(height: 100),
               GestureDetector(
                 onTap: toggleVpn,
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
                   width: 160,
                   height: 160,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(
-                        color: isConnected ? Colors.blueAccent.withOpacity(0.5) : Colors.transparent,
-                        blurRadius: 40,
-                        spreadRadius: 5,
-                      )
+                      if (isConnected) 
+                        BoxShadow(color: Colors.blueAccent.withOpacity(0.4), blurRadius: 30, spreadRadius: 5)
                     ],
                     gradient: RadialGradient(
-                      colors: isConnected ? [Colors.blueAccent, Colors.blue.shade900] : [Colors.grey.shade800, Colors.black],
+                      colors: isConnected 
+                        ? [Colors.blueAccent, Colors.blue.shade900] 
+                        : [Colors.grey.shade800, Colors.black],
                     ),
                   ),
-                  child: Icon(Icons.power_settings_new, size: 80, color: Colors.white),
+                  child: const Icon(Icons.power_settings_new, size: 80, color: Colors.white),
                 ),
               ),
-              SizedBox(height: 50),
-              Text(isConnected ? "CONNECTED" : "DISCONNECTED", style: TextStyle(color: isConnected ? Colors.blueAccent : Colors.grey)),
+              const SizedBox(height: 50),
+              Text(
+                isConnected ? "CONNECTED" : "DISCONNECTED", 
+                style: TextStyle(color: isConnected ? Colors.blueAccent : Colors.grey, fontWeight: FontWeight.bold)
+              ),
             ],
           ),
         ),
