@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- WireGuard VPN İzinleri -->
+	<key>NetworkExtensions</key>
+	<array>
+		<string>wireguard</string>
+	</array>
 </dict>
 </plist>
