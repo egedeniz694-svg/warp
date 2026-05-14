@@ -1,10 +1,22 @@
-# iOS platform sürümünü 15.0 yapıyoruz
+# Flutter'ın yardımcı scriptlerini dosyaya dahil ediyoruz
+require_relative '../.flutter-plugins-dependencies'
+
+# iOS platform sürümünü 15.0 yapıyoruz (WireGuard için şart)
 platform :ios, '15.0'
+
+# Flutter'ın kendi yapılandırma scriptini yüklüyoruz
+def flutter_install_ios_engine_pod(installer)
+  extension_path = File.join(File.dirname(File.realpath(__FILE__)), '..', '.flutter-plugins-dependencies')
+  if File.exist?(extension_path)
+    require extension_path
+  end
+end
 
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
+  # Eklentileri ve Flutter pod'larını buraya kuruyoruz
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
@@ -12,7 +24,7 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
-      # Her bir hedef için iOS 15.0 zorunluluğunu buraya da ekliyoruz
+      # Her bir hedef için iOS 15.0 zorunluluğunu garantiye alıyoruz
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
     end
   end
