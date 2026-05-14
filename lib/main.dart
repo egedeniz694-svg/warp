@@ -28,7 +28,7 @@ class WarpHome extends StatefulWidget {
 }
 
 class _WarpHomeState extends State<WarpHome> {
-  final WireGuardFlutter _wireguard = WireGuardFlutter.instance;
+  final _wireguard = WireGuardFlutter.instance;
 
   bool isConnected = false;
   bool isLoading = false;
@@ -36,7 +36,6 @@ class _WarpHomeState extends State<WarpHome> {
   final String interfaceName = "wg0";
   final String serverAddress = "100.27.231.149:51820";
 
-  // WireGuard config
   final String vpnConfig = """
 [Interface]
 PrivateKey = YPilfrHHIeb6F2Y53SUb+jqZ0btEJqW4LmB7rX5QD3k=
@@ -91,11 +90,6 @@ PersistentKeepalive = 25
         setState(() => isLoading = false);
       }
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -176,9 +170,7 @@ PersistentKeepalive = 25
               ),
               const SizedBox(height: 50),
               Text(
-                isLoading
-                    ? "BAĞLANIYOR..."
-                    : (isConnected ? "BAĞLI" : "BAĞLI DEĞİL"),
+                isLoading ? "BAĞLANIYOR..." : (isConnected ? "BAĞLI" : "BAĞLI DEĞİL"),
                 style: TextStyle(
                   color: active ? Colors.blueAccent : Colors.grey,
                   fontWeight: FontWeight.bold,
