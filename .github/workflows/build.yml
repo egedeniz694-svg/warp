@@ -1,31 +1,22 @@
-name: Flutter Build (APK & IPA)
+name: iOS IPA Build
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build:
+  ios:
     runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Java Kurulumu
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
 
       - name: Flutter Kurulumu
         uses: subosito/flutter-action@v2
         with:
           channel: stable
 
-      - name: Clean
-        run: flutter clean
-
-      - name: Get Dependencies
+      - name: Dependencies
         run: flutter pub get
 
       - name: iOS Pods
@@ -34,22 +25,28 @@ jobs:
           pod install
           cd ..
 
-      # ANDROID
-      - name: Build APK
-        run: flutter build apk --debug
-
-      # iOS (APP build)
-      - name: Build iOS App
+      - name: Build iOS (no codesign)
         run: flutter build ios --no-codesign
 
-      # 🔥 BURASI KRİTİK: IPA üret
-      - name: Create IPA (unsigned)
-        run: flutter build ipa --no-codesign
+      - name: Create Archive
+        run: |
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            archive
 
-      - name: Upload Artifacts
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath ios/build/Runner.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist ios/ExportOptions.plist
+
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: build-output
-          path: |
-            build/app/outputs/flutter-apk/*.apk
-            build/ios/ipa/*.ipa
+          name: ipa
+          path: build/ios/ipa/*.ipa
