@@ -28,6 +28,7 @@ class _WarpHomeState extends State<WarpHome> {
   final _wireguard = WireGuardFlutter.instance;
   bool isConnected = false;
 
+  // Senin VDS Konfigürasyonun
   final String vpnConfig = """
 [Interface]
 PrivateKey = YPilfrHHIeb6F2Y53SUb+jqZ0btEJqW4LmB7rX5QD3k=
@@ -45,16 +46,14 @@ PersistentKeepalive = 25
   void toggleVpn() async {
     try {
       if (isConnected) {
-        // 'stop' yerine 'deactivate' (0.1.3 sürümü için)
-        await _wireguard.deactivate(); 
+        await _wireguard.deactivate(); // Hata giderildi: deactivate
       } else {
-        // 'start' yerine 'activate' (0.1.3 sürümü için)
         await _wireguard.activate(
           bundleId: "com.egedeniz.warp", 
-          containerId: "", // iOS tarafı için gerekebilir, şimdilik boş
+          containerId: "", 
           config: vpnConfig,
           name: "WarpVPN",
-        );
+        ); // Hata giderildi: activate
       }
       setState(() => isConnected = !isConnected);
     } catch (e) {
@@ -110,7 +109,7 @@ PersistentKeepalive = 25
               ),
               const SizedBox(height: 50),
               Text(
-                isConnected ? "CONNECTED" : "DISCONNECTED", 
+                isConnected ? "BAĞLI" : "BAĞLI DEĞİL", 
                 style: TextStyle(color: isConnected ? Colors.blueAccent : Colors.grey, fontWeight: FontWeight.bold)
               ),
             ],
