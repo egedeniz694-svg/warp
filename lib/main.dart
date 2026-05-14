@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:glassmorphism/glassmorphism.dart';
 import 'package:wireguard_flutter/wireguard_flutter.dart';
 
-void main() => runApp(const WarpApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const WarpApp());
+}
 
 class WarpApp extends StatelessWidget {
   const WarpApp({super.key});
@@ -25,10 +28,15 @@ class WarpHome extends StatefulWidget {
 }
 
 class _WarpHomeState extends State<WarpHome> {
-  final _wireguard = WireGuardFlutter.instance;
-  bool isConnected = false;
+  final WireGuardFlutter _wireguard = WireGuardFlutter.instance;
 
-  // Senin VDS Konfigürasyonun
+  bool isConnected = false;
+  bool isLoading = false;
+
+  final String interfaceName = "wg0";
+  final String serverAddress = "100.27.231.149:51820";
+
+  // WireGuard config
   final String vpnConfig = """
 [Interface]
 PrivateKey = YPilfrHHIeb6F2Y53SUb+jqZ0btEJqW4LmB7rX5QD3k=
@@ -43,26 +51,57 @@ Endpoint = 100.27.231.149:51820
 PersistentKeepalive = 25
 """;
 
-  void toggleVpn() async {
+  @override
+  void initState() {
+    super.initState();
+    _initWireGuard();
+  }
+
+  Future<void> _initWireGuard() async {
+    try {
+      await _wireguard.initialize(interfaceName: interfaceName);
+    } catch (e) {
+      debugPrint("WireGuard initialize hatası: $e");
+    }
+  }
+
+  Future<void> toggleVpn() async {
+    if (isLoading) return;
+
+    setState(() => isLoading = true);
+
     try {
       if (isConnected) {
-        await _wireguard.deactivate(); // Hata giderildi: deactivate
+        await _wireguard.stopVpn();
+        if (!mounted) return;
+        setState(() => isConnected = false);
       } else {
-        await _wireguard.activate(
-          bundleId: "com.egedeniz.warp", 
-          containerId: "", 
-          config: vpnConfig,
-          name: "WarpVPN",
-        ); // Hata giderildi: activate
+        await _wireguard.startVpn(
+          serverAddress: serverAddress,
+          wgQuickConfig: vpnConfig,
+          providerBundleIdentifier: "com.egedeniz.warp",
+        );
+        if (!mounted) return;
+        setState(() => isConnected = true);
       }
-      setState(() => isConnected = !isConnected);
     } catch (e) {
       debugPrint("VPN Hatası: $e");
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bool active = isConnected && !isLoading;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -76,15 +115,25 @@ PersistentKeepalive = 25
           linearGradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
+            colors: [
+              Colors.white.withOpacity(0.10),
+              Colors.white.withOpacity(0.05),
+            ],
           ),
-          borderGradient: LinearGradient(
+          borderGradient: const LinearGradient(
             colors: [Colors.blueAccent, Colors.purpleAccent],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("WARP", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 8)),
+              const Text(
+                "WARP",
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 8,
+                ),
+              ),
               const SizedBox(height: 100),
               GestureDetector(
                 onTap: toggleVpn,
@@ -95,22 +144,45 @@ PersistentKeepalive = 25
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
-                      if (isConnected) 
-                        BoxShadow(color: Colors.blueAccent.withOpacity(0.4), blurRadius: 30, spreadRadius: 5)
+                      if (active)
+                        BoxShadow(
+                          color: Colors.blueAccent.withOpacity(0.4),
+                          blurRadius: 30,
+                          spreadRadius: 5,
+                        ),
                     ],
                     gradient: RadialGradient(
-                      colors: isConnected 
-                        ? [Colors.blueAccent, Colors.blue.shade900] 
-                        : [Colors.grey.shade800, Colors.black],
+                      colors: active
+                          ? [Colors.blueAccent, Colors.blue.shade900]
+                          : [Colors.grey.shade800, Colors.black],
                     ),
                   ),
-                  child: const Icon(Icons.power_settings_new, size: 80, color: Colors.white),
+                  child: Center(
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 34,
+                            height: 34,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.power_settings_new,
+                            size: 80,
+                            color: Colors.white,
+                          ),
+                  ),
                 ),
               ),
               const SizedBox(height: 50),
               Text(
-                isConnected ? "BAĞLI" : "BAĞLI DEĞİL", 
-                style: TextStyle(color: isConnected ? Colors.blueAccent : Colors.grey, fontWeight: FontWeight.bold)
+                isLoading
+                    ? "BAĞLANIYOR..."
+                    : (isConnected ? "BAĞLI" : "BAĞLI DEĞİL"),
+                style: TextStyle(
+                  color: active ? Colors.blueAccent : Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
