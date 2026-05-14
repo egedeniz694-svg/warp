@@ -22,28 +22,34 @@ jobs:
         with:
           channel: stable
 
-      - name: Flutter Clean
+      - name: Clean
         run: flutter clean
 
-      - name: Dependencies
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: iOS Pod Install
+      - name: iOS Pods
         run: |
           cd ios
           pod install
           cd ..
 
-      - name: Android Build (APK)
+      # ANDROID
+      - name: Build APK
         run: flutter build apk --debug
 
-      - name: iOS Build (No Codesign)
+      # iOS (APP build)
+      - name: Build iOS App
         run: flutter build ios --no-codesign
+
+      # 🔥 BURASI KRİTİK: IPA üret
+      - name: Create IPA (unsigned)
+        run: flutter build ipa --no-codesign
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Warp-Build
+          name: build-output
           path: |
             build/app/outputs/flutter-apk/*.apk
-            build/ios/iphoneos/*.app
+            build/ios/ipa/*.ipa
